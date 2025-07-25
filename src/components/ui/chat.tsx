@@ -19,29 +19,32 @@ export default function Chat({
         sendExtraMessageFields: true, // send id and createdAt for each message
     });
 
-    const scrollAreaRef = useRef<HTMLDivElement>(null)
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+    if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual'
+    }
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
         if (scrollAreaRef.current) {
-            scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
+            scrollAreaRef.current.scrollIntoView(false)
         }
-        console.log(messages);
     }, [messages])
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-            <Card className="w-full max-w-2xl h-[600px] flex flex-col shadow-lg">
-                <CardHeader className="border-b">
+            <Card className="w-full max-w-2xl h-[600px] flex flex-col shadow-lg overflow-hidden">
+                <CardHeader className="border-b flex-shrink-0">
                     <CardTitle className="flex items-center gap-2">
                         <Bot className="h-5 w-5 text-blue-600" />
                         AI Chat Assistant
                     </CardTitle>
                 </CardHeader>
 
-                <CardContent className="flex-1 p-0">
-                    <ScrollArea className="h-full p-4" ref={scrollAreaRef}>
-                        <div className="space-y-4">
+                <CardContent className="flex-1 overflow-hidden p-0">
+                    <ScrollArea className="h-full p-4 space-y-4">
+                        <div className="p-4 space-y-4" ref={scrollAreaRef}>
                             {messages.length === 0 && (
                                 <div className="text-center text-gray-500 mt-8">
                                     <Bot className="h-12 w-12 mx-auto mb-4 text-gray-300" />
@@ -116,7 +119,7 @@ export default function Chat({
                     </ScrollArea>
                 </CardContent>
 
-                <CardFooter className="border-t p-4">
+                <CardFooter className="border-t p-4 flex-shrink-0">
                     <form onSubmit={handleSubmit} className="flex w-full gap-2">
                         <Input
                             value={input}
