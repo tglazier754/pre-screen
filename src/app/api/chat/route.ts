@@ -15,7 +15,6 @@ export async function POST(req: Request) {
     //get the questions record - TODO - replace with DB
     const initialQuestions = await loadQuestions(id);
     let questions = initialQuestions.concat([]);//use concat to get a copy of the array
-    console.log(initialQuestions);
 
     //determine which question was previously asked
     const prevQuestion = getPreviouslyAskedQuestion(questions);
@@ -41,13 +40,13 @@ export async function POST(req: Request) {
             }),
             prompt: `Analyze the following question and answer to determine if the answer is correct. question: ${prevQuestion.question} answer: ${messages[messages.length - 1].content}`
         });
-        console.log(object);
+
         prevQuestion.analysis = object.analysis;
         prevQuestion.score = object.score;
         prevQuestion.wasPreviouslyAsked = false;
         questions = replaceQuestion(initialQuestions, prevQuestion);
-        console.log(questions);
-        saveQuestions({ id, questions });
+
+        await saveQuestions({ id, questions });
     }
 
     //TODO : have the bot generate a question if the previous answer was insufficient
@@ -55,22 +54,16 @@ export async function POST(req: Request) {
     //get the model to review previous responses and generate a temperature check that the model can use in the next response
 
     const nextQuestion = getNextQuestionToAsk(questions);
-    console.log("------");
-    console.log(nextQuestion);
+
     const temperature = "You have been scoring particularly well so far";
     let prompt = `Let the candidate know that the interview is now over.`;
     if (nextQuestion !== undefined) {
         nextQuestion.wasPreviouslyAsked = true;
         questions = replaceQuestion(questions, nextQuestion);
-        saveQuestions({ id, questions });
+        await saveQuestions({ id, questions });
 
         prompt = `Using an analysis of previous performance, pose the following question to the user without providing any additional context. analysis:${temperature}, question:${nextQuestion.question}`;
     }
-    else {
-
-
-    }
-
 
     const result = streamText({
         model: openai("gpt-4o"),
@@ -86,8 +79,5 @@ export async function POST(req: Request) {
             });
         },
     })
-    return result.toDataStreamResponse()
-
-
-
+    return result.toDataStreamResponse();
 }
